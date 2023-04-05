@@ -25,3 +25,31 @@ def handle_mentions(event, say):
 # Start the app
 if __name__ == "__main__":
     app.start(port=int(os.environ.get("PORT", 3000)))
+
+import os
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+
+# Set your Slack app token and target channel ID here
+SLACK_APP_TOKEN = os.environ['SLACK_APP_TOKEN']
+SLACK_TARGET_CHANNEL = 'C1234567890'
+
+# Initialize the Slack API client with your app token
+client = WebClient(token=SLACK_APP_TOKEN)
+
+# Define the message to be sent
+message = "Hello, world!"
+
+# Define a function to send the message to the target channel
+def send_message_to_slack_channel(channel, message):
+    try:
+        response = client.chat_postMessage(
+            channel=channel,
+            text=message
+        )
+        print("Message sent: ", message)
+    except SlackApiError as e:
+        print("Error sending message: {}".format(e))
+
+# Call the function to send the message to the target channel
+send_message_to_slack_channel(SLACK_TARGET_CHANNEL, message)
