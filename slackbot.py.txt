@@ -1,0 +1,27 @@
+import os
+from slack_bolt import App
+
+# Set your Slack app token and target channel ID here
+SLACK_APP_TOKEN = os.environ['SLACK_APP_TOKEN']
+SLACK_TARGET_CHANNEL = 'C1234567890'
+
+# Initialize the Slack app with your app token
+app = App(token=SLACK_APP_TOKEN)
+
+# Define a function to send the message to the target channel
+def send_message_to_slack_channel(channel, message):
+    response = app.client.chat_postMessage(
+        channel=channel,
+        text=message
+    )
+    print("Message sent: ", message)
+
+# Define a message listener that sends a reply when the bot is mentioned
+@app.event("app_mention")
+def handle_mentions(event, say):
+    message = "Hello, <@%s>!" % event["user"]
+    send_message_to_slack_channel(SLACK_TARGET_CHANNEL, message)
+
+# Start the app
+if __name__ == "__main__":
+    app.start(port=int(os.environ.get("PORT", 3000)))
