@@ -53,3 +53,56 @@ def send_message_to_slack_channel(channel, message):
 
 # Call the function to send the message to the target channel
 send_message_to_slack_channel(SLACK_TARGET_CHANNEL, message)
+
+
+from botbuilder.core import BotFrameworkAdapter, TurnContext
+from botbuilder.schema import Activity
+
+# Set your bot's app ID and password here
+APP_ID = "<your_app_id>"
+APP_PASSWORD = "<your_app_password>"
+
+# Initialize the bot adapter with your app ID and password
+bot_adapter = BotFrameworkAdapter(APP_ID, APP_PASSWORD)
+
+# Define a function to send a message to the user
+async def send_message_to_user(turn_context: TurnContext, message: str):
+    activity = Activity(
+        type=ActivityTypes.message,
+        text=message,
+    )
+    await turn_context.send_activity(activity)
+
+# Define a message handler that responds to a specific message
+async def handle_message(turn_context: TurnContext):
+    message = turn_context.activity.text
+    if message == "hello":
+        await send_message_to_user(turn_context, "Hello, world!")
+
+# Define a function to handle incoming messages
+async def on_message_activity(context: TurnContext):
+    if context.activity.type == ActivityTypes.message:
+        await handle_message(context)
+
+# Start the bot
+if __name__ == "__main__":
+    app = Flask(__name__)
+    app.config.from_object(__name__)
+    @app.route("/api/messages", methods=["POST"])
+    def messages():
+        if "application/json" in request.headers["Content-Type"]:
+            request_body = request.json
+        else:
+            return Response(status=415)
+        activity = Activity().deserialize(request_body)
+        auth_header = request.headers["Authorization"] if "Authorization" in request.headers else ""
+        try:
+            response = await bot_adapter.process_activity(activity, auth_header, on_message_activity)
+            if response:
+                return json.dumps(response)
+            return Response(status=201)
+        except Exception as e:
+            print(e)
+            return Response(status=500)
+    app.run()
+
